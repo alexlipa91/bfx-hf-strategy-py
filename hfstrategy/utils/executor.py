@@ -3,6 +3,7 @@ import asyncio
 import websockets
 import signal
 import sys
+import json
 
 from prettytable import PrettyTable
 from bfxapi import Client
@@ -102,6 +103,17 @@ def _finish(strategy):
     totalLossesCount, round(totalLosses, 2), totalGainersCount,
     round(totalGainers, 2)))
   logger.info("{} Positions | {} Trades".format(len(positions), totalTrades))
+
+  # get useful result data
+  path = "current_run/results.json"
+
+  result_data = {'total_profit_loss': totalGainers + totalLosses}
+  f = open(path, "a")
+  f.write(json.dumps(result_data))
+  f.close()
+
+  logger.info("Saved results in {}".format(path))
+
 
 async def _seed_candles(strategy, bfxapi, tf):
   seed_candles = await bfxapi.rest.get_seed_candles(strategy.symbol, tf=tf)
