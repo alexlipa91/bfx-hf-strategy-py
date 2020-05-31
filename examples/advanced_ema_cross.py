@@ -9,13 +9,20 @@ from hfstrategy import PositionError
 from bfxhfindicators import EMA
 from hfstrategy.models.price_update import PriceUpdate
 
+# params
+ema_l = 100
+ema_s = 20
+quick_profit_target_percentage = 0.002
+profit_target_percentage = 0.05
+stop_loss_percentage = 0.02
+
 # Initialise strategy
 strategy = Strategy(
   symbol='tBTCUSD',
   indicators={
     # see https://github.com/bitfinexcom/bfx-hf-indicators-py for more info
-    'emaL': EMA(100),
-    'emaS': EMA(20)
+    'emaL': EMA(ema_l),
+    'emaS': EMA(ema_s)
   },
   exchange_type=Strategy.ExchangeType.EXCHANGE,
   logLevel='INFO'
@@ -24,9 +31,9 @@ strategy = Strategy(
 async def enter_long(update):
   await strategy.open_long_position_market(mtsCreate=update.mts, amount=1)
   # set profit target to 5% above entry
-  profit_target = update.price + (update.price * 0.05)
+  profit_target = update.price + (update.price * profit_target_percentage)
   # set a tight stop los of %2 below entry
-  stop_loss = update.price - (update.price * 0.02)
+  stop_loss = update.price - (update.price * stop_loss_percentage)
   # update positions with new targets
   await strategy.set_position_target(profit_target)
   await strategy.set_position_stop(stop_loss)
@@ -34,9 +41,9 @@ async def enter_long(update):
 async def enter_short(update):
   await strategy.open_short_position_market(mtsCreate=update.mts, amount=1)
   # same as above, take full proft at 5%
-  profit_target = update.price - (update.price * 0.05)
+  profit_target = update.price - (update.price * profit_target_percentage)
   # set stop loss to %2 below entry
-  stop_loss = update.price + (update.price * 0.02)
+  stop_loss = update.price + (update.price * stop_loss_percentage)
   await strategy.set_position_target(profit_target)
   await strategy.set_position_stop(stop_loss)
 
@@ -66,7 +73,7 @@ async def update_short(update, position):
   half_position = abs(position.amount)/2
   if half_position < 0.1:
     return
-  if update.price < entry - (position.price * 0.002):
+  if update.price < entry - (position.price * quick_profit_target_percentage):
     print ("Reached profit target, take 2%")
     await strategy.update_position_market(
       mtsCreate=update.mts, amount=half_position, tag="Hit profit target")
@@ -89,14 +96,18 @@ async def update_long(update, position):
   half_position = abs(position.amount)/2
   if half_position < 0.1:
     return
-  if update.price > entry + (position.price * 0.002):
+  if update.price > entry + (position.price * quick_profit_target_percentage):
     print ("Reached profit target, take 2%")
     await strategy.update_position_market(
       mtsCreate=update.mts, amount=-half_position,  tag="Hit mid profit target")
     # set our stop loss to be our original entry price
     await strategy.set_position_stop(entry, exit_type=Position.ExitType.MARKET)
 
+
+import io
+from contextlib import redirect_stdout
 from hfstrategy import Executor
+
 Executor(strategy, timeframe='1hr').offline(file='btc_candle_data.json')
 # Executor(strategy, timeframe='1m').backtest_live()
 
