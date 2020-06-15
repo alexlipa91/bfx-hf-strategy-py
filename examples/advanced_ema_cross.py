@@ -6,7 +6,9 @@ import json
 import shutil
 
 
-for p in ['../', '../../bitfinex-api-py', '../../bfx-hf-indicators-py', '../../bfx-hf-strategy-py']:
+for p in [
+    # '../', '../../bitfinex-api-py',
+    '../../bfx-hf-indicators-py', '../../bfx-hf-strategy-py']:
   sys.path.append(p)
 
 from hfstrategy import Strategy, Position
@@ -29,7 +31,8 @@ def single_run(ema_l, ema_s, quick_profit_target_percentage, profit_target_perce
    )
 
    async def enter_long(update):
-     await strategy.open_long_position_market(mtsCreate=update.mts, amount=1)
+     amount = 1000 / update.price
+     await strategy.open_long_position_market(mtsCreate=update.mts, amount=amount)
      # set profit target to 5% above entry
      profit_target = update.price + (update.price * profit_target_percentage)
      # set a tight stop los of %2 below entry
@@ -39,7 +42,8 @@ def single_run(ema_l, ema_s, quick_profit_target_percentage, profit_target_perce
      await strategy.set_position_stop(stop_loss)
 
    async def enter_short(update):
-     await strategy.open_short_position_market(mtsCreate=update.mts, amount=1)
+     amount = 1000 / update.price
+     await strategy.open_short_position_market(mtsCreate=update.mts, amount=100)
      # same as above, take full proft at 5%
      profit_target = update.price - (update.price * profit_target_percentage)
      # set stop loss to %2 below entry
@@ -113,7 +117,7 @@ def single_run(ema_l, ema_s, quick_profit_target_percentage, profit_target_perce
    # import time
    # now = int(round(time.time() * 1000))
    # then = now - (1000 * 60 * 60 * 24 * 15) # 15 days ago
-   # Executor(strategy, timeframe='30m').with_data_server(then, now)
+   Executor(strategy, timeframe='30m').with_data_server(then, now)
 
    with open('current_run/results.json') as json_file:
     total_profit_loss = json.load(json_file)['total_profit_loss']

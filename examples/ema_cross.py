@@ -1,6 +1,10 @@
 import sys
 import asyncio
 sys.path.append('../')
+for p in ['../',
+          '../../bitfinex-api-py',
+          '../../bfx-hf-indicators-py', '../../bfx-hf-strategy-py']:
+  sys.path.append(p)
 
 from hfstrategy import Strategy
 from bfxhfindicators import EMA
@@ -45,16 +49,16 @@ async def update_long(update, position):
     await strategy.close_position_market(mtsCreate=update.mts)
 
 from hfstrategy import Executor
-exe = Executor(strategy,  timeframe='30m')
+exe = Executor(strategy,  timeframe='30m', show_chart=False)
 
 # Backtest offline
-exe.offline(file='btc_candle_data.json')
+# exe.offline(file='btc_candle_data.json')
 
 # Backtest with data-backtest server
-# import time
-# now = int(round(time.time() * 1000))
-# then = now - (1000 * 60 * 60 * 24 * 15) # 15 days ago
-# exe.with_data_server(then, now)
+import time
+now = int(round(time.time() * 1000))
+then = now - (1000 * 60) # 15 days ago
+exe.with_data_server(then, now)
 
 # Execute live
 # import os
