@@ -7,7 +7,7 @@ import shutil
 
 
 for p in [
-    # '../', '../../bitfinex-api-py',
+    '../', '../../bitfinex-api-py',
     '../../bfx-hf-indicators-py', '../../bfx-hf-strategy-py']:
   sys.path.append(p)
 
@@ -43,7 +43,7 @@ def single_run(ema_l, ema_s, quick_profit_target_percentage, profit_target_perce
 
    async def enter_short(update):
      amount = 1000 / update.price
-     await strategy.open_short_position_market(mtsCreate=update.mts, amount=100)
+     await strategy.open_short_position_market(mtsCreate=update.mts, amount=amount)
      # same as above, take full proft at 5%
      profit_target = update.price - (update.price * profit_target_percentage)
      # set stop loss to %2 below entry
@@ -117,10 +117,13 @@ def single_run(ema_l, ema_s, quick_profit_target_percentage, profit_target_perce
    # import time
    # now = int(round(time.time() * 1000))
    # then = now - (1000 * 60 * 60 * 24 * 15) # 15 days ago
-   Executor(strategy, timeframe='30m').with_data_server(then, now)
+   # Executor(strategy, timeframe='30m').with_data_server(then, now)
 
    with open('current_run/results.json') as json_file:
     total_profit_loss = json.load(json_file)['total_profit_loss']
 
    shutil.rmtree("current_run")
    return total_profit_loss
+
+
+single_run(100, 40, 0.01, 0.05, 0.02)
